@@ -1,6 +1,8 @@
 package Socket_V2.Login;
 
 import Socket_V2.Client.ChatClient;
+import Socket_V2.OV.User;
+import Socket_V2.Tool.AuthTool;
 
 import javax.swing.*;
 import javax.swing.border.Border;
@@ -9,7 +11,6 @@ import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.File;
 import java.io.IOException;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -22,7 +23,7 @@ import java.net.UnknownHostException;
  */
 public class ClientLogin extends JFrame {
     private JTextField nametext  ;
-    private JPasswordField passwordtetx ;
+    private JPasswordField passwordtext ;
     //private Object bPanel;
 
     public ClientLogin()  {
@@ -47,7 +48,7 @@ public class ClientLogin extends JFrame {
         mainPanel.setBorder(BorderFactory.createTitledBorder(border, "输入登陆信息", TitledBorder.CENTER, TitledBorder.TOP));
         this.add(mainPanel, BorderLayout.CENTER);     //将主面板加入frame
         mainPanel.setLayout(null);
-        JLabel namelabel = new JLabel("请输入昵称");
+        JLabel namelabel = new JLabel("请输入学号");
         namelabel.setBounds(30, 30, 80, 22);
         mainPanel.add(namelabel);
         nametext = new JTextField();
@@ -56,9 +57,9 @@ public class ClientLogin extends JFrame {
         JLabel passwordlabel = new JLabel("请输入密码");
         passwordlabel.setBounds(30, 60, 80, 22);
         mainPanel.add(passwordlabel);
-        passwordtetx = new JPasswordField();
-        passwordtetx.setBounds(115, 60, 120, 22);
-        mainPanel.add(passwordtetx);
+        passwordtext = new JPasswordField();
+        passwordtext.setBounds(115, 60, 120, 22);
+        mainPanel.add(passwordtext);
 
         //接下来按钮位置排放
         JPanel bPanel = new JPanel();
@@ -68,7 +69,7 @@ public class ClientLogin extends JFrame {
         reset.addActionListener(new ActionListener() {    //为“重置”按钮添加事件监听
             public void actionPerformed(ActionEvent e) {
                 nametext.setText("");
-                passwordtetx.setText("");
+                passwordtext.setText("");
             }
         });
         bPanel.add(reset);
@@ -91,19 +92,28 @@ public class ClientLogin extends JFrame {
         }
 
         public void actionPerformed(ActionEvent e)  {
+            AuthTool authTool = new AuthTool();
             //System.out.println("用户名是："+ nametext.getText()+" 密码是："+new String(passwordtext.getPassword())) ;
-            try  {
-                //开始连接到服务器
-                Socket socket = new Socket("192.168.50.223",8888) ;
-                new ChatClient(socket,nametext.getText()) ;
-                //调用dispose方法关闭登陆框
-                self.dispose();
-            }catch(UnknownHostException e1)  {
-                e1.printStackTrace();
-                JOptionPane.showConfirmDialog(self, "找不到指定服务器!~","连接失败",JOptionPane.OK_OPTION,JOptionPane.ERROR_MESSAGE) ;
-            }catch(IOException e1)  {
-                e1.printStackTrace() ;
-                JOptionPane.showConfirmDialog(self, "连接服务器出错，请重试！","连接失败",JOptionPane.OK_OPTION,JOptionPane.ERROR_MESSAGE) ;
+            if(authTool.getAuth(nametext.getText(),new String(passwordtext.getPassword()))) {
+
+                User user = new User();
+                user = authTool.getInfo(nametext.getText());
+                try {
+                    //开始连接到服务器
+                    Socket socket = new Socket("192.168.50.223", 8888);
+                    new ChatClient(socket, user.getUserName());
+                    //调用dispose方法关闭登陆框
+                    self.dispose();
+                } catch (UnknownHostException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showConfirmDialog(self, "找不到指定服务器!~", "连接失败", JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE);
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                    JOptionPane.showConfirmDialog(self, "连接服务器出错，请重试！", "连接失败", JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            else{
+                JOptionPane.showConfirmDialog(self, "学号或密码错误！", "登录失败", JOptionPane.OK_OPTION, JOptionPane.ERROR_MESSAGE);
             }
         }
 
